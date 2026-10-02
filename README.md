@@ -1,6 +1,6 @@
 # Restful-Booker API Test Suite
 
-![API Tests](https://github.com/YOUR_USERNAME/api-test-suite/actions/workflows/api-tests.yml/badge.svg)
+![API Tests](https://github.com/Trushiii/api-test-suite/actions/workflows/api-tests.yml/badge.svg)
 
 A production-grade API test automation suite built with **Postman** and **Newman**, testing the [Restful-Booker](https://restful-booker.herokuapp.com/apidoc/index.html) public API.
 
@@ -14,13 +14,14 @@ A production-grade API test automation suite built with **Postman** and **Newman
 - **CI/CD integration** — GitHub Actions runs the suite on every push
 - **Rich HTML reports** — Newman htmlextra reporter generates per-collection dashboards
 
-## 📊 Test Coverage — 17 Requests / 38 Assertions
+## 📊 Test Coverage — 19 Requests / 34 Assertions
 
-| Collection | Requests | Focus |
-|---|---|---|
-| Authentication | 3 | Token generation, invalid creds, empty body |
-| Bookings CRUD | 8 | Create → Get → Update → Patch → Delete → Verify |
-| Negative & Security | 6 | Malformed input, SQLi, XSS, unauthorized access |
+| Collection | Requests | Assertions | Focus |
+|---|---|---|---|
+| Authentication | 4 | 7 | Warm-up, token generation, invalid creds, empty body |
+| Bookings CRUD | 9 | 19 | Auth setup → Create → Get → Update → Patch → Delete → Verify |
+| Negative & Security | 6 | 8 | Malformed input, SQLi, XSS, unauthorized access |
+| **Total** | **19** | **34** | **Full API surface coverage** |
 
 ## 🏗️ Project Structure
 
