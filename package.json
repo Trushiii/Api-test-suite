@@ -1,0 +1,36 @@
+{
+  "name": "api-test-suite",
+  "version": "1.0.0",
+  "description": "Postman + Newman API test suite for Restful-Booker — 19 requests, 34 assertions, CI via GitHub Actions",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test:auth": "newman run collections/01-auth.postman_collection.json -e environments/dev.postman_environment.json --reporters cli,htmlextra --reporter-htmlextra-export reports/auth-report.html",
+    "test:bookings": "newman run collections/02-bookings.postman_collection.json -e environments/dev.postman_environment.json --reporters cli,htmlextra --reporter-htmlextra-export reports/bookings-report.html",
+    "test:negative": "newman run collections/03-negative.postman_collection.json -e environments/dev.postman_environment.json --reporters cli,htmlextra --reporter-htmlextra-export reports/negative-report.html",
+    "test:all": "npm run test:auth && npm run test:bookings && npm run test:negative",
+    "test:ci": "newman run collections/01-auth.postman_collection.json -e environments/dev.postman_environment.json && newman run collections/02-bookings.postman_collection.json -e environments/dev.postman_environment.json && newman run collections/03-negative.postman_collection.json -e environments/dev.postman_environment.json"
+  },
+  "keywords": [
+    "qa",
+    "api-testing",
+    "postman",
+    "newman",
+    "automation",
+    "rest-api"
+  ],
+  "author": "Tharushi Gandarawaththa",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Trushiii/api-test-suite.git"
+  },
+  "homepage": "https://github.com/Trushiii/api-test-suite#readme",
+  "bugs": {
+    "url": "https://github.com/Trushiii/api-test-suite/issues"
+  },
+  "devDependencies": {
+    "newman": "^6.2.2",
+    "newman-reporter-htmlextra": "^1.23.1"
+  }
+}

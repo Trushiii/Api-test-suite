@@ -1,0 +1,151 @@
+{
+  "info": {
+    "name": "03 — Negative & Security",
+    "description": "Edge cases, malformed input, and security-focused tests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "TC_NEG_001 — Missing required field returns 500",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Rejected with 400 or 500', () => {",
+            "  pm.expect(pm.response.code).to.be.oneOf([400, 500]);",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstname\": \"Test\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/booking", "host": ["{{baseUrl}}"], "path": ["booking"] }
+      }
+    },
+    {
+      "name": "TC_NEG_002 — Malformed JSON rejected",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Malformed JSON rejected', () => {",
+            "  pm.expect(pm.response.code).to.be.oneOf([400, 500]);",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{ invalid json here" },
+        "url": { "raw": "{{baseUrl}}/booking", "host": ["{{baseUrl}}"], "path": ["booking"] }
+      }
+    },
+    {
+      "name": "TC_NEG_003 — Non-existent booking returns 404",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/booking/999999999", "host": ["{{baseUrl}}"], "path": ["booking", "999999999"] }
+      }
+    },
+    {
+      "name": "TC_NEG_004 — Update without auth token rejected",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 403 (Forbidden)', () => pm.response.to.have.status(403));"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstname\": \"Hacker\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/booking/1", "host": ["{{baseUrl}}"], "path": ["booking", "1"] }
+      }
+    },
+    {
+      "name": "TC_NEG_005 — SQL injection in string field",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Server does not leak SQL errors', () => {",
+            "  const body = pm.response.text().toLowerCase();",
+            "  pm.expect(body).to.not.include('sql');",
+            "  pm.expect(body).to.not.include('syntax error');",
+            "  pm.expect(body).to.not.include('mysql');",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstname\": \"Robert'); DROP TABLE bookings;--\",\n  \"lastname\": \"Injection\",\n  \"totalprice\": 100,\n  \"depositpaid\": true,\n  \"bookingdates\": { \"checkin\": \"2026-06-01\", \"checkout\": \"2026-06-05\" }\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/booking", "host": ["{{baseUrl}}"], "path": ["booking"] }
+      }
+    },
+    {
+      "name": "TC_NEG_006 — XSS payload stored safely as JSON string",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+           "pm.test('Response is valid JSON (not HTML)', () => {",
+              "  pm.response.to.be.json;",
+              "});",
+              "pm.test('Content-Type is application/json', () => {",
+              "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+              "});",
+              "pm.test('Script tag is stored as string, not executed', () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.booking.firstname).to.be.a('string');",
+              "  pm.expect(body.booking.firstname).to.include('<script>');",
+              "});"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstname\": \"<script>alert('xss')</script>\",\n  \"lastname\": \"XSS\",\n  \"totalprice\": 100,\n  \"depositpaid\": true,\n  \"bookingdates\": { \"checkin\": \"2026-06-01\", \"checkout\": \"2026-06-05\" }\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/booking", "host": ["{{baseUrl}}"], "path": ["booking"] }
+      }
+    }
+  ]
+}

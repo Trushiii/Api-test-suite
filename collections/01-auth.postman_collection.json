@@ -1,0 +1,105 @@
+{
+  "info": {
+    "name": "01 — Authentication",
+    "description": "Auth tests for Restful-Booker. Covers token generation and edge cases.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+
+    {
+  "name": "WARMUP — Ping the API",
+  "event": [{
+    "listen": "test",
+    "script": {
+      "exec": [
+        "pm.test('API is reachable', () => pm.response.to.be.success);",
+        "console.log('Warm-up complete. Response time: ' + pm.response.responseTime + 'ms');"
+      ],
+      "type": "text/javascript"
+    }
+  }],
+  "request": {
+    "method": "GET",
+    "header": [],
+    "url": { "raw": "{{baseUrl}}/ping", "host": ["{{baseUrl}}"], "path": ["ping"] }
+  }
+},
+
+    {
+      "name": "TC_AUTH_001 — Valid credentials return token",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+            "pm.test('Response has token field', () => {",
+            "  const body = pm.response.json();",
+            "  pm.expect(body).to.have.property('token');",
+            "  pm.expect(body.token).to.be.a('string').and.not.empty;",
+            "});",
+            "pm.test('Response time under 5000ms (allows cold start)', () => pm.expect(pm.response.responseTime).to.be.below(5000));",            "// Save token to environment for chained requests",
+            "const body = pm.response.json();",
+            "pm.environment.set('authToken', body.token);"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/auth", "host": ["{{baseUrl}}"], "path": ["auth"] }
+      }
+    },
+    {
+      "name": "TC_AUTH_002 — Invalid credentials return error",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status code is 200 (Restful-Booker quirk)', () => pm.response.to.have.status(200));",
+            "pm.test('Response contains reason: Bad credentials', () => {",
+            "  const body = pm.response.json();",
+            "  pm.expect(body.reason).to.eql('Bad credentials');",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"wrong_user\",\n  \"password\": \"wrong_pass\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/auth", "host": ["{{baseUrl}}"], "path": ["auth"] }
+      }
+    },
+    {
+      "name": "TC_AUTH_003 — Empty body returns error",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Returns error for empty body', () => {",
+            "  pm.expect(pm.response.code).to.be.oneOf([400, 200]);",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } },
+        "url": { "raw": "{{baseUrl}}/auth", "host": ["{{baseUrl}}"], "path": ["auth"] }
+      }
+    }
+  ]
+}

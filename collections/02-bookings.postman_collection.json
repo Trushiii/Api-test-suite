@@ -1,0 +1,249 @@
+{
+  "info": {
+    "name": "02 — Bookings CRUD",
+    "description": "Full CRUD coverage with auth chaining and schema validation.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+
+    {
+  "name": "SETUP — Get auth token",
+  "event": [{
+    "listen": "test",
+    "script": {
+      "exec": [
+        "pm.test('Auth succeeded', () => pm.response.to.be.success);",
+        "pm.test('Token was returned', () => {",
+        "  const body = pm.response.json();",
+        "  pm.expect(body).to.have.property('token');",
+        "  pm.environment.set('authToken', body.token);",
+        "  console.log('Token acquired: ' + body.token.substring(0, 8) + '...');",
+        "});"
+      ],
+      "type": "text/javascript"
+    }
+  }],
+  "request": {
+    "method": "POST",
+    "header": [{ "key": "Content-Type", "value": "application/json" }],
+    "body": {
+      "mode": "raw",
+      "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+      "options": { "raw": { "language": "json" } }
+    },
+    "url": { "raw": "{{baseUrl}}/auth", "host": ["{{baseUrl}}"], "path": ["auth"] }
+  }
+},
+
+    {
+      "name": "TC_BK_001 — Create new booking",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+            "pm.test('Response has bookingid', () => {",
+            "  const body = pm.response.json();",
+            "  pm.expect(body).to.have.property('bookingid');",
+            "  pm.expect(body.bookingid).to.be.a('number');",
+            "});",
+            "pm.test('Booking has expected schema', () => {",
+            "  const b = pm.response.json().booking;",
+            "  pm.expect(b).to.have.property('firstname');",
+            "  pm.expect(b).to.have.property('lastname');",
+            "  pm.expect(b).to.have.property('totalprice');",
+            "  pm.expect(b).to.have.property('bookingdates');",
+            "});",
+            "// Save ID for chained tests",
+            "pm.environment.set('bookingId', pm.response.json().bookingid);"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstname\": \"{{firstName}}\",\n  \"lastname\": \"{{lastName}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-06-01\",\n    \"checkout\": \"2026-06-05\"\n  },\n  \"additionalneeds\": \"Breakfast\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/booking", "host": ["{{baseUrl}}"], "path": ["booking"] }
+      }
+    },
+    {
+      "name": "TC_BK_002 — Get booking by ID",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+            "pm.test('First name matches created booking', () => {",
+            "  pm.expect(pm.response.json().firstname).to.eql(pm.environment.get('firstName'));",
+            "});",
+            "pm.test('Response time under 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/booking/{{bookingId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking", "{{bookingId}}"]
+        }
+      }
+    },
+    {
+      "name": "TC_BK_003 — Update booking (PUT)",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+            "pm.test('Last name updated', () => {",
+            "  pm.expect(pm.response.json().lastname).to.eql('Updated');",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Cookie", "value": "token={{authToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstname\": \"{{firstName}}\",\n  \"lastname\": \"Updated\",\n  \"totalprice\": 200,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-06-01\",\n    \"checkout\": \"2026-06-10\"\n  },\n  \"additionalneeds\": \"Late checkout\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/booking/{{bookingId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking", "{{bookingId}}"]
+        }
+      }
+    },
+    {
+      "name": "TC_BK_004 — Partial update (PATCH)",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+            "pm.test('Additional needs updated', () => {",
+            "  pm.expect(pm.response.json().additionalneeds).to.eql('Airport pickup');",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Cookie", "value": "token={{authToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"additionalneeds\": \"Airport pickup\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/booking/{{bookingId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking", "{{bookingId}}"]
+        }
+      }
+    },
+    {
+      "name": "TC_BK_005 — List all booking IDs",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+            "pm.test('Response is an array', () => pm.expect(pm.response.json()).to.be.an('array'));",
+            "pm.test('Response time under 2000ms', () => pm.expect(pm.response.responseTime).to.be.below(2000));"],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/booking", "host": ["{{baseUrl}}"], "path": ["booking"] }
+      }
+    },
+    {
+      "name": "TC_BK_006 — Filter by first name",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+            "pm.test('Returns array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/booking?firstname={{firstName}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking"],
+          "query": [{ "key": "firstname", "value": "{{firstName}}" }]
+        }
+      }
+    },
+    {
+      "name": "TC_BK_007 — Delete booking",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 201', () => pm.response.to.have.status(201));"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Cookie", "value": "token={{authToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/booking/{{bookingId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking", "{{bookingId}}"]
+        }
+      }
+    },
+    {
+      "name": "TC_BK_008 — Deleted booking returns 404",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/booking/{{bookingId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["booking", "{{bookingId}}"]
+        }
+      }
+    }
+  ]
+}
